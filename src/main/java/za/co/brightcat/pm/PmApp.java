@@ -1,5 +1,14 @@
 package za.co.brightcat.pm;
 
+import java.io.IOException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +29,42 @@ public class PmApp {
 
     @Autowired
     private ProjectRepository pr;
+    
+    @Bean
+    public Filter filter() {
+        return new Filter() {
+            @Override
+            public void init(FilterConfig fc) throws ServletException {
+                
+            }
+
+            @Override
+            public void doFilter(ServletRequest sreq, ServletResponse resp, FilterChain fc) throws IOException, ServletException {
+                final HttpServletRequest req = (HttpServletRequest) sreq;
+                final String path = req.getServletPath();
+                LOGGER.debug("Path info: {}", path);
+                if (path.endsWith(".html") || path.endsWith(".js")) {
+                    fc.doFilter(req, resp);
+                    return;
+                }
+                final String token = req.getHeader("auth-token");
+                LOGGER.info("Auth token is: {}", token);
+
+                if (token == null) {
+                    final HttpServletResponse hr = (HttpServletResponse)resp;
+                    LOGGER.warn("Unauthorized access to {} from {}", req.getRequestURI(),req.getRemoteHost());
+                    hr.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+                fc.doFilter(sreq, resp);
+            }
+
+            @Override
+            public void destroy() {
+                
+            }
+        };
+    }
 
     @Bean
     public CommandLineRunner commandLineRunner() {

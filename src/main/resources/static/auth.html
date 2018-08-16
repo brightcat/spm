@@ -12,7 +12,14 @@ and open the template in the editor.
     </head>
     <body>
         <div>TODO write content</div>
-        <div id="content"></div>
+        <div id="content">
+            <nav>
+                <ul>
+                    <li class="app-link"><a href="#/project">Project</a></li>
+                </ul>
+            </nav>
+            <div id="app-content"></div>
+        </div>
         <script id="test" type="html/x-template">
         <div>
             <div>
@@ -28,6 +35,7 @@ and open the template in the editor.
         </div>
         </script>
         <script src="http://zeptojs.com/zepto.min.js"></script>
+        <script src="bus.js"></script>
         <script src="auth.js"></script>
     </body>
 </html>

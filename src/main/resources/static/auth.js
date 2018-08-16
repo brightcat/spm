@@ -1,29 +1,3 @@
-var event = Object.create(null);
-event.Bus = function() {
-    var events = Object.create(null);
-    var o = Object.create(null);
-    
-    o.subscribe = function(event, f) {
-        if (!events[event]) {
-            events[event] = [];
-        }
-        events[event].push(f);
-    };
-    
-    o.publish = function(event, payload) {
-        if (!events[event]) {
-            throw "No event handler for " + event;
-        }
-        var i;
-        var listeners = events[event];
-        for (i = 0; i < listeners.length; i++) {
-            listeners[i](payload);
-        }
-    };
-  
-    return o;
-};
-
 var view = Object.create(null);
 view.Auth = function(el, template, model) {
     var o = Object.create(null);
@@ -50,6 +24,24 @@ view.Template = function(el) {
     return o;
 };
 
+var controller = Object.create(null);
+controller.App = function(_bus, node, unauthedView, authedView) {
+    var o = Object.create(null);
+    
+    o.unauthenticated = function() {
+        node.innerHTML = unauthedView.render().el;
+        _bus.publish("app:unauthed");
+    };
+    
+    o.authed = function() {
+        node.innerHTML = authedView.render().el;
+        _bus.publish("app:authed");
+    };
+    
+    return o;
+};
+
+
 var nodeContent = document.getElementById("content");
 var nodeTemplate = document.getElementById("test");
 console.log('next', document.getElementById("next"));
@@ -60,8 +52,15 @@ var authView = view.Auth(nodeContent, templateAuth, {username:"testuser", passwo
 
 var bus = event.Bus();
 const UNAUTHORIZED = 1;
-bus.subscribe(UNAUTHORIZED, authView.render);
-bus.subscribe(UNAUTHORIZED, console.log);
+//bus.subscribe(UNAUTHORIZED, authView.render);
+//bus.subscribe(UNAUTHORIZED, console.log);
+var app = controller.App(bus, nodeContent, authView, { render: function() {
+        return {
+            el: "<h2>Projects</h2>"
+        };
+}
+});
+bus.subscribe(UNAUTHORIZED, app.unauthenticated);
 
 $.ajax({
     url: "/project",
